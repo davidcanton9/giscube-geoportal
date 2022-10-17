@@ -2,6 +2,7 @@
 import Vue from 'vue'
 import { QBtn, QIcon } from 'quasar'
 import L from 'src/lib/leaflet'
+import proj4 from 'proj4'
 
 import LatLngPopup from './LatLngPopup'
 import ResultPanelMixin from './ResultPanelMixin'
@@ -21,6 +22,14 @@ export function toCoords (coords) {
   const lng = parseFloat(coords[2])
   if (isNaN(lat) || isNaN(lng)) {
     return null
+  }
+
+  if (lat > 360 && lng > 360) {
+    const utm = '+proj=utm +zone=31 +datum=WGS84 +units=m +no_defs +ellps=WGS84'
+    const etrs89 = '+proj=longlat +datum=WGS84 +ellps=WGS84 +no_defs'
+    let latLng = proj4(utm, etrs89, [lat, lng])
+    console.log(latLng)
+    return latLng.reverse()
   }
 
   return [lat, lng]
