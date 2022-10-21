@@ -161,6 +161,8 @@ import L from 'src/lib/leaflet'
 import { convertGeoJsonToDXF, downloadDXF } from 'src/lib/fileutils'
 import { mapState } from 'vuex'
 import { saveAs } from 'file-saver'
+import axios from 'axios'
+import WMSCapabilities from 'wms-capabilities'
 
 import DataFilter from './data-layer/DataFilter'
 import DataLayerTable from './data-layer/DataTable'
@@ -383,8 +385,25 @@ export default {
           return
         }
       }
-
-      // If we can't zoom, go to home view
+      if (this.result.children[0].type === 'WMS') {
+        let wmsUrl = this.result.children[0].url
+        if (!wmsUrl.includes('?')) { wmsUrl += '?' }
+        wmsUrl += 'service=WMS&request=GetCapabilities'
+        axios.get(wmsUrl).then(res => {
+          const json = new WMSCapabilities(res.data).toJSON()
+          for (let i = 0; i < 4; i++) {
+            let EPSG = json.Capability.Layer.BoundingBox[i].crs
+            if (EPSG === 'EPSG:4326') {
+              let bbox = json.Capability.Layer.BoundingBox[i].extent
+              this.map.fitBounds([
+                [bbox[0], bbox[1]],
+                [bbox[2], bbox[3]]
+              ])
+            }
+          }
+        })
+      }
+      // If we can't zoom, go t o home view
       const home = this.$config.home
       this.map.flyTo(new L.LatLng(home.center.lat, home.center.lng), home.zoom)
     }
