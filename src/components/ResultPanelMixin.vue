@@ -383,6 +383,8 @@ export default {
           return
         }
       }
+      // else if this.layer
+      // this.layer -> url (axios.get(url).then(function (response) { response a dins té el bbox }))
 
       // If we can't zoom, go to home view
       const home = this.$config.home
